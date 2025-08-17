@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { TaskCard } from "@/components/cards/TaskCard";
 import { TaskStatus } from "@/components/ui/status-badge";
+import { TitleSelectionModal } from "@/components/modals/TitleSelectionModal";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data - será substituído pelo Supabase
 const mockTasks = [
@@ -38,6 +40,9 @@ const mockTasks = [
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState(mockTasks);
+  const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleStatusChange = (taskId: string, newStatus: TaskStatus) => {
     setTasks(prevTasks =>
@@ -45,11 +50,34 @@ export default function Dashboard() {
         task.id === taskId ? { ...task, status: newStatus } : task
       )
     );
+    
+    toast({
+      title: "Status atualizado",
+      description: `Status alterado para ${newStatus}`,
+    });
   };
 
   const handleGetTitle = (taskId: string) => {
-    // TODO: Implementar modal para seleção de título do banco de ideias
-    console.log("Abrir modal de seleção de título para tarefa:", taskId);
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setSelectedTaskId(taskId);
+      setIsTitleModalOpen(true);
+    }
+  };
+
+  const handleSelectTitle = (title: string) => {
+    if (selectedTaskId) {
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === selectedTaskId ? { ...task, title } : task
+        )
+      );
+      
+      toast({
+        title: "Título selecionado",
+        description: "O título foi adicionado à tarefa.",
+      });
+    }
   };
 
   const getCurrentDate = () => {
@@ -124,6 +152,14 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* Modal de Seleção de Título */}
+      <TitleSelectionModal
+        isOpen={isTitleModalOpen}
+        onClose={() => setIsTitleModalOpen(false)}
+        onSelectTitle={handleSelectTitle}
+        channelName={selectedTaskId ? tasks.find(t => t.id === selectedTaskId)?.channelName || "" : ""}
+      />
     </div>
   );
 }

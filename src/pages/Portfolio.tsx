@@ -3,6 +3,8 @@ import { Plus, Edit, Trash2, Globe, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ChannelModal } from "@/components/modals/ChannelModal";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data - será substituído pelo Supabase
 const mockChannels = [
@@ -42,21 +44,56 @@ const mockChannels = [
 ];
 
 export default function Portfolio() {
-  const [channels] = useState(mockChannels);
+  const [channels, setChannels] = useState(mockChannels);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingChannel, setEditingChannel] = useState<any>(null);
+  const { toast } = useToast();
 
   const handleEditChannel = (channelId: string) => {
-    console.log("Editar canal:", channelId);
-    // TODO: Implementar modal de edição
+    const channel = channels.find(c => c.id === channelId);
+    if (channel) {
+      setEditingChannel(channel);
+      setIsModalOpen(true);
+    }
   };
 
   const handleDeleteChannel = (channelId: string) => {
-    console.log("Excluir canal:", channelId);
-    // TODO: Implementar confirmação e exclusão
+    setChannels(prev => prev.filter(c => c.id !== channelId));
+    toast({
+      title: "Canal excluído",
+      description: "O canal foi removido com sucesso.",
+    });
   };
 
   const handleAddChannel = () => {
-    console.log("Adicionar novo canal");
-    // TODO: Implementar modal de criação
+    setEditingChannel(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveChannel = (channelData: any) => {
+    if (editingChannel) {
+      // Editar canal existente
+      setChannels(prev => prev.map(c => 
+        c.id === editingChannel.id 
+          ? { ...channelData, id: editingChannel.id }
+          : c
+      ));
+      toast({
+        title: "Canal atualizado",
+        description: "As informações do canal foram atualizadas.",
+      });
+    } else {
+      // Adicionar novo canal
+      const newChannel = {
+        ...channelData,
+        id: (channels.length + 1).toString(),
+      };
+      setChannels(prev => [...prev, newChannel]);
+      toast({
+        title: "Canal criado",
+        description: "O novo canal foi adicionado com sucesso.",
+      });
+    }
   };
 
   const getNicheHierarchy = (channel: any) => {
@@ -201,6 +238,15 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Canal */}
+      <ChannelModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveChannel}
+        channel={editingChannel}
+        title={editingChannel ? "Editar Canal" : "Novo Canal"}
+      />
     </div>
   );
 }

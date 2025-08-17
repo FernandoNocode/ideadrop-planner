@@ -250,6 +250,16 @@ export default function Ideias() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Ideia */}
+      <IdeaModal
+        isOpen={isIdeaModalOpen}
+        onClose={() => setIsIdeaModalOpen(false)}
+        onSave={handleSaveIdea}
+        idea={editingIdea}
+        channels={mockChannels.map(c => ({ id: c.id, name: c.name }))}
+        preSelectedChannelId={selectedChannel.id}
+      />
     </div>
   );
 }
